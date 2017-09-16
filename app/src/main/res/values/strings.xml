@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Email to SMS</string>
+    <string name="open_settings">Open settings</string>
+    <string name="close_settings">Close settings</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="refresh_db">Load DB</string>
+    <string name="mail_server_parameters">Mail server parameters:</string>
+    <string name="mail_server">Mail server</string>
+    <string name="user_name">User name</string>
+    <string name="password">Password</string>
+    <string name="message_processing_parameters">Message processing parameters:</string>
+    <string name="incoming_email_domain">Incoming email domain</string>
+    <string name="inbox_folder_name">Inbox folder name</string>
+    <string name="checked_folder_name">Checked folder name</string>
+    <string name="sms_sender">SMS sender</string>
+    <string name="check_period">Mailbox check period (in seconds)</string>
+    <string name="db_file">DB file:</string>
+    <string name="load_db">Load DB</string>
+    <string name="save">Save</string>
+    <string name="service_restarted">Service restarted</string>
+</resources>

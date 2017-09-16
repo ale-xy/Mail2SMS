@@ -1,0 +1,54 @@
+Short Description: App will read email inbox. When an email is received it evaluates based on who sent the email, and may send an SMS.
+
+Full Description:
+
+The app will check an email account waiting for emais. Must only consider email from a set domain. The first part of the email is our UserID and will be used to identify who sent the email.
+When it receives the email, it checks a database file, find UserID's credentials, check if it is valid and if it is, sends a SMS message to numbers found on his credentials.
+
+Database file must be easily editable(preferably .xls or .csv) and contain the following information for each client ( I attached an example of my database file is):
+
+UserID;User Name;Contact number1;Contact number2;Contact Number3;Status(Valid or Expired);misc slot1;misc slot2;misc slot3.
+
+The message sent by sms must contain what's inside "misc slot1"and "misc slot2" for the user and the current date and time.
+
+
+All emails checked by the APP must be moved to a "checked" folder on the email.
+
+I want to be able to check the mailbox our APP is checking.
+
+UI can be very simple, A start/stop button is more than enough. Configuration of email settings can be done by reading a configuration file or on the app's UI whatever is easier for you to code.
+
+The app must deal with all emails on the inbox when it starts.
+
+I am open to suggestions if it makes you job much easier without harm to features.
+
+Examples considering the use of attached sample database file:
+
+
+Example 1:
+
+It is 1/1/18, 10:00, App detects new email from 10001@mydomain .com.
+Expected actions:
+Status row for user 10001 is Ok.
+It would send the message "Sample text 1 Sample Text 11 - 1/1/18, 10:00" to numbers 111111111, 111111112 and 111111113 and move the email to the checked folder.
+
+Example 2:
+
+It is 2/2/18, 12:00, App detects new email from 88125@mydomain .com.
+Expected actions:
+Status row for user 88125 is Ok.
+It would send the message "Sample text 6 Sample Text 16 - 2/2/18, 12:00" to numbers 666666666 , 666666667 and 666666668 and move the email to the checked folder.
+
+Example 3:
+
+It is 1/2/18, 11:25, App detects new email from 88124@mydomain .com.
+Expected Actions:
+Status row for user 88124 is not OK, move the email to the checked folder without sending SMS.
+
+Examlpe 4:
+
+It is 1/1/18, 10:00, App detects new email from 10001@notmydomain .com.
+Expected actions:
+Email is not from @mydomain.com, does nothing and moves email to checked folder.
+
+If you have any questions please ask.
