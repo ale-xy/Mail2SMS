@@ -25,7 +25,6 @@ import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -52,9 +51,12 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.password) EditText password;
     @BindView(R.id.mail_domain) EditText mailDomain;
     @BindView(R.id.inbox_folder) EditText inboxFolder;
-    @BindView(R.id.checked_folder) EditText checkedFolder;
-//    @BindView(R.id.sms_sender) EditText smsSender;
+    @BindView(R.id.notified_folder) EditText notifiedFolder;
+    @BindView(R.id.timeout_folder) EditText timeoutFolder;
+    @BindView(R.id.not_notified_folder) EditText notNotifiedFolder;
+    @BindView(R.id.ignored_folder) EditText ignoredFolder;
     @BindView(R.id.check_period) EditText checkPeriod;
+    @BindView(R.id.sms_timeout) EditText smsTimeout;
     @BindView(R.id.save_settings_button) Button saveSettingsButton;
 
     @Override
@@ -219,7 +221,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @OnTextChanged({R.id.mail_server, R.id.user_name, R.id.password, R.id.mail_domain, R.id.inbox_folder, R.id.checked_folder, /*R.id.sms_sender,*/ R.id.check_period})
+    @OnTextChanged({R.id.mail_server,
+                    R.id.user_name,
+                    R.id.password,
+                    R.id.mail_domain,
+                    R.id.inbox_folder,
+                    R.id.notified_folder,
+                    R.id.timeout_folder,
+                    R.id.not_notified_folder,
+                    R.id.ignored_folder,
+                    R.id.check_period,
+                    R.id.sms_timeout })
     public void onTextChanged(CharSequence text) {
         if (isSettingsChanged()) {
             saveSettingsButton.setEnabled(true);
@@ -232,9 +244,12 @@ public class MainActivity extends AppCompatActivity {
         password.setText(mailSettings.mailPassword);
         mailDomain.setText(mailSettings.mailDomain);
         inboxFolder.setText(mailSettings.inboxFolder);
-        checkedFolder.setText(mailSettings.checkedFolder);
-//        smsSender.setText(mailSettings.smsSender);
+        notifiedFolder.setText(mailSettings.notifiedFolder);
+        timeoutFolder.setText(mailSettings.timeoutFolder);
+        notNotifiedFolder.setText(mailSettings.notNotifiedFolder);
+        ignoredFolder.setText(mailSettings.ignoredFolder);
         checkPeriod.setText(String.valueOf(mailSettings.checkPeriod));
+        smsTimeout.setText(String.valueOf(mailSettings.smsTimeout));
     }
 
     private MailSettings collectMailSettings() {
@@ -246,9 +261,12 @@ public class MainActivity extends AppCompatActivity {
         mailSettings.mailPassword = password.getText().toString();
         mailSettings.mailDomain = mailDomain.getText().toString();
         mailSettings.inboxFolder = inboxFolder.getText().toString();
-        mailSettings.checkedFolder = checkedFolder.getText().toString();
-//        mailSettings.smsSender = smsSender.getText().toString();
+        mailSettings.notifiedFolder = notifiedFolder.getText().toString();
+        mailSettings.timeoutFolder = timeoutFolder.getText().toString();
+        mailSettings.notNotifiedFolder = notNotifiedFolder.getText().toString();
+        mailSettings.ignoredFolder = ignoredFolder.getText().toString();
         mailSettings.checkPeriod = Integer.parseInt(checkPeriod.getText().toString());
+        mailSettings.smsTimeout = Integer.parseInt(smsTimeout.getText().toString());
 
         return mailSettings;
     }
@@ -262,9 +280,12 @@ public class MainActivity extends AppCompatActivity {
                 TextUtils.equals(mailSettings.mailPassword, password.getText().toString()) &&
                 TextUtils.equals(mailSettings.mailDomain, mailDomain.getText().toString()) &&
                 TextUtils.equals(mailSettings.inboxFolder, inboxFolder.getText().toString()) &&
-                TextUtils.equals(mailSettings.checkedFolder, checkedFolder.getText().toString()) &&
-//                TextUtils.equals(mailSettings.smsSender, smsSender.getText().toString()) &&
+                TextUtils.equals(mailSettings.notifiedFolder, notifiedFolder.getText().toString()) &&
+                TextUtils.equals(mailSettings.timeoutFolder, timeoutFolder.getText().toString()) &&
+                TextUtils.equals(mailSettings.notNotifiedFolder, notNotifiedFolder.getText().toString()) &&
+                TextUtils.equals(mailSettings.ignoredFolder, ignoredFolder.getText().toString()) &&
                 TextUtils.equals(String.valueOf(mailSettings.checkPeriod), checkPeriod.getText().toString());
+                TextUtils.equals(String.valueOf(mailSettings.smsTimeout), smsTimeout.getText().toString());
 
         return !equals;
     }

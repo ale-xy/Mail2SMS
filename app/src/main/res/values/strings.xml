@@ -19,4 +19,9 @@
     <string name="load_db">Load DB</string>
     <string name="save">Save</string>
     <string name="service_restarted">Service restarted</string>
+    <string name="sms_timeout">SMS timeout (in minutes)</string>
+    <string name="notified">Notified</string>
+    <string name="timeout">Timeout</string>
+    <string name="no_notification">No notification</string>
+    <string name="ignored">Ignored</string>
 </resources>

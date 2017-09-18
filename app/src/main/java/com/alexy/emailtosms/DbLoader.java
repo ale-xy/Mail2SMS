@@ -4,6 +4,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.alexy.emailtosms.data.UserConfigItem;
+import com.orm.SugarRecord;
 
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ParseBool;
@@ -78,6 +79,10 @@ public class DbLoader {
 
             while((userConfigItem = beanReader.read(UserConfigItem.class, UserConfigItem.HEADERS, processors)) != null ) {
                 items.put(userConfigItem.getUserId(), userConfigItem);
+
+                if (userConfigItem != null) {
+                    SugarRecord.update(userConfigItem);
+                }
 
                 Log.d("DbLoader", String.format("lineNo=%s, rowNo=%s, item=%s", beanReader.getLineNumber(),
                         beanReader.getRowNumber(), userConfigItem));

@@ -2,7 +2,6 @@ package com.alexy.emailtosms;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Environment;
 
 import com.alexy.emailtosms.data.MailSettings;
 
@@ -19,9 +18,12 @@ class Preferences {
     private static final String MAIL_PASSWORD = "MAIL_PASSWORD";
     private static final String MAIL_DOMAIN = "MAIL_DOMAIN";
     private static final String INBOX_FOLDER = "INBOX_FOLDER";
-    private static final String CHECKED_FOLDER = "CHECKED_FOLDER";
-//    private static final String SMS_SENDER = "SMS_SENDER";
+    private static final String NOTIFIED_FOLDER = "NOTIFIED_FOLDER";
+    private static final String TIMEOUT_FOLDER = "TIMEOUT_FOLDER";
+    private static final String NOT_NOTIFIED_FOLDER = "NOT_NOTIFIED_FOLDER";
+    private static final String IGNORED_FOLDER = "IGNORED_FOLDER";
     private static final String CHECK_PERIOD = "CHECK_PERIOD";
+    private static final String SMS_TIMEOUT = "SMS_TIMEOUT";
     private static final String DB_FILE = "DB_FILE";
 
 
@@ -50,14 +52,18 @@ class Preferences {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
         MailSettings mailSettings = new MailSettings();
 
-        mailSettings.mailServer = sharedPreferences.getString(MAIL_SERVER, null);
+        mailSettings.mailServer = sharedPreferences.getString(MAIL_SERVER, "br30.hostgator.com.br");
         mailSettings.mailUser = sharedPreferences.getString(MAIL_LOGIN, null);
         mailSettings.mailPassword = sharedPreferences.getString(MAIL_PASSWORD, null);
         mailSettings.inboxFolder = sharedPreferences.getString(INBOX_FOLDER, "INBOX");
-        mailSettings.checkedFolder = sharedPreferences.getString(CHECKED_FOLDER, "Checked");
-        mailSettings.mailDomain = sharedPreferences.getString(MAIL_DOMAIN, null);
-//        mailSettings.smsSender = sharedPreferences.getString(SMS_SENDER, null);
+        mailSettings.notifiedFolder = sharedPreferences.getString(NOTIFIED_FOLDER, "INBOX.Checked and notified");
+        mailSettings.timeoutFolder = sharedPreferences.getString(TIMEOUT_FOLDER, "INBOX.Checked with timeout");
+        mailSettings.notNotifiedFolder = sharedPreferences.getString(NOT_NOTIFIED_FOLDER, "INBOX.Checked but no notification");
+        mailSettings.ignoredFolder = sharedPreferences.getString(IGNORED_FOLDER, "INBOX.Checked and ignored");
+
+        mailSettings.mailDomain = sharedPreferences.getString(MAIL_DOMAIN, "monitoracaoja.com.br");
         mailSettings.checkPeriod = sharedPreferences.getInt(CHECK_PERIOD, 60);
+        mailSettings.smsTimeout = sharedPreferences.getInt(SMS_TIMEOUT, 10);
 
         return mailSettings;
     }
@@ -71,9 +77,12 @@ class Preferences {
                 putString(MAIL_PASSWORD, settings.mailPassword).
                 putString(MAIL_DOMAIN, settings.mailDomain).
                 putString(INBOX_FOLDER, settings.inboxFolder).
-                putString(CHECKED_FOLDER, settings.checkedFolder).
-//                putString(SMS_SENDER, settings.smsSender).
+                putString(NOTIFIED_FOLDER, settings.notifiedFolder).
+                putString(TIMEOUT_FOLDER, settings.timeoutFolder).
+                putString(NOT_NOTIFIED_FOLDER, settings.notNotifiedFolder).
+                putString(IGNORED_FOLDER, settings.ignoredFolder).
                 putInt(CHECK_PERIOD, settings.checkPeriod).
+                putInt(SMS_TIMEOUT, settings.smsTimeout).
                 apply();
     }
 }

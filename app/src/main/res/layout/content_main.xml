@@ -156,6 +156,38 @@
                 android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputEditText
+                    android:id="@+id/check_period"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="@string/check_period"
+                    android:inputType="number" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/sms_timeout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="@string/sms_timeout"
+                    android:inputType="number" />
+            </android.support.design.widget.TextInputLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Mail folders:" />
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <android.support.design.widget.TextInputEditText
                     android:id="@+id/inbox_folder"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -164,43 +196,63 @@
                     android:inputType="text" />
             </android.support.design.widget.TextInputLayout>
 
+            <!--// Email comes and message is sent moves to a "Checked and notified" folder;-->
+            <!--// Email comes and message is not sent because of time limit, moves to a-->
+            <!--// "Checked/timeout" folder;-->
+            <!--//    Recognizes the userID, but user doesn't have an OK on his check, moves to-->
+            <!--//            "Checked but no notification" folder;-->
+            <!--//    Email from unknown userID or from odd domain to a "Checked and ignored"-->
+            <!--//    folder.-->
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputEditText
-                    android:id="@+id/checked_folder"
+                    android:id="@+id/notified_folder"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:hint="@string/checked_folder_name"
+                    android:hint="@string/notified"
                     android:inputType="text" />
             </android.support.design.widget.TextInputLayout>
 
-            <!--<android.support.design.widget.TextInputLayout-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content">-->
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-                <!--<android.support.design.widget.TextInputEditText-->
-                    <!--android:id="@+id/sms_sender"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:ems="10"-->
-                    <!--android:hint="@string/sms_sender"-->
-                    <!--android:inputType="text" />-->
-            <!--</android.support.design.widget.TextInputLayout>-->
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/timeout_folder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="@string/timeout"
+                    android:inputType="text" />
+            </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputEditText
-                    android:id="@+id/check_period"
+                    android:id="@+id/not_notified_folder"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:hint="@string/check_period"
-                    android:inputType="number" />
+                    android:hint="@string/no_notification"
+                    android:inputType="text" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/ignored_folder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="@string/ignored"
+                    android:inputType="text" />
             </android.support.design.widget.TextInputLayout>
 
             <Button

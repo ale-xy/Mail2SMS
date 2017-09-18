@@ -21,8 +21,8 @@ public class MailSmsService extends IntentService {
         Log.d("MailSmsService", "onHandleIntent");
 
         try {
-            Map<String, UserConfigItem> userCofigItems = DbLoader.readDb(Preferences.getDbFile(getApplicationContext()));
-            MailProcessor mailProcessor = new MailProcessor(Preferences.getMailSettings(getApplicationContext()), userCofigItems, getApplicationContext());
+//            Map<String, UserConfigItem> userCofigItems = DbLoader.readDb(Preferences.getDbFile(getApplicationContext()));
+            MailProcessor mailProcessor = new MailProcessor(Preferences.getMailSettings(getApplicationContext()), getApplicationContext());
             mailProcessor.process();
         } catch (Exception e) {
             Log.e("MailSmsService", e.getMessage());

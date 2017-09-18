@@ -1,6 +1,7 @@
 package com.alexy.emailtosms;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
@@ -8,13 +9,14 @@ import android.util.Log;
 
 import com.alexy.emailtosms.data.MailSettings;
 import com.alexy.emailtosms.data.UserConfigItem;
+import com.orm.SugarRecord;
+import com.orm.query.Condition;
+import com.orm.query.Select;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.mail.Address;
@@ -22,7 +24,6 @@ import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
@@ -34,34 +35,36 @@ import javax.mail.internet.InternetAddress;
 public class MailProcessor {
 
     static class SmsMessage {
-        public SmsMessage(String phoneNumber, String text) {
+        final String phoneNumber;
+        final String text;
+        final String user;
+
+        public SmsMessage(String phoneNumber, String text, String user) {
             this.phoneNumber = phoneNumber;
             this.text = text;
+            this.user = user;
         }
+    }
 
-        String phoneNumber;
-        String text;
+    private enum EmailAction {
+        SEND_SMS,
+        TIMEOUT,
+        USER_DISABLED,
+        IGNORED
     }
 
     private final MailSettings mailSettings;
-    private final Map<String, UserConfigItem> userConfigItems;
     private final Context context;
 
-    public MailProcessor(MailSettings mailSettings, Map<String, UserConfigItem> userConfigItems, Context context) {
+    public MailProcessor(MailSettings mailSettings, Context context) {
         this.mailSettings = mailSettings;
-        this.userConfigItems = userConfigItems;
         this.context = context;
     }
 
     public synchronized void process() {
 
         try {
-            Properties properties = new Properties();
-
-            properties.setProperty("mail.store.protocol", "imaps");
-            Session emailSession = Session.getDefaultInstance(properties);
-            Store store = emailSession.getStore("imaps");
-            store.connect(mailSettings.mailServer, mailSettings.mailUser, mailSettings.mailPassword);
+            Store store = connectToMailServer();
 
 //            Folder[] folders = store.getDefaultFolder().list();
 //
@@ -75,29 +78,54 @@ public class MailProcessor {
             Message[] emails = inbox.getMessages();
 
             if (emails.length > 0) {
-                Folder checked = store.getFolder(mailSettings.checkedFolder);
-
-                if (!checked.exists()) {
-                    boolean created = checked.create(Folder.HOLDS_MESSAGES);
-                    Log.d("MailProcessor", "folder "+mailSettings.checkedFolder+" created: " + created);
-                }
-
-                checked.open(Folder.READ_WRITE);
 
                 for (Message email:emails) {
-                    List<SmsMessage> sms = getSmsMessages(email);
-                    if (sms != null && !sms.isEmpty()) {
-                        for (SmsMessage smsMessage: sms) {
-                            sendSms(smsMessage);
-                        }
+                    String user = getUser(email);
+
+                    EmailAction action = getEmailAction(user);
+
+                    String folderName;
+
+                    switch (action) {
+                        case IGNORED:
+                            folderName = mailSettings.ignoredFolder;
+                            break;
+                        case TIMEOUT:
+                            folderName = mailSettings.timeoutFolder;
+                            break;
+                        case USER_DISABLED:
+                            folderName = mailSettings.notNotifiedFolder;
+                            break;
+                        case SEND_SMS:
+                            List<SmsMessage> sms = getSmsMessages(user);
+                            if (sms != null && !sms.isEmpty()) {
+                                folderName = mailSettings.notifiedFolder;
+
+                                for (SmsMessage smsMessage: sms) {
+                                    sendSms(smsMessage);
+                                }
+
+                                UserConfigItem userConfigItem = getUserConfig(user);
+                                userConfigItem.setLastMessageDate(Calendar.getInstance().getTime());
+                                SugarRecord.update(userConfigItem);
+                            } else {
+                                folderName = mailSettings.notNotifiedFolder;
+                            }
+
+                            break;
+                        default:
+                            folderName = null;
                     }
 
-                    inbox.copyMessages(new Message[]{email}, checked);
-                    Flags deleted = new Flags(Flags.Flag.DELETED);
-                    inbox.setFlags(new Message[]{email}, deleted, true);
-                }
+                    Folder destination = store.getFolder(folderName);
 
-                checked.close(true);
+                    if (!destination.exists()) {
+                        boolean created = destination.create(Folder.HOLDS_MESSAGES);
+                        Log.d("MailProcessor", "folder " + destination.getName() +" created: " + created);
+                    }
+
+                    moveMessages(inbox, email, destination);
+                }
             } else {
                 Log.d("MailProcessor", "No messages found");
             }
@@ -112,8 +140,27 @@ public class MailProcessor {
         }
     }
 
+    private void moveMessages(Folder inbox, Message email, Folder destination) throws MessagingException {
+        destination.open(Folder.READ_WRITE);
 
-    private List<SmsMessage> getSmsMessages(Message email) throws MessagingException{
+        inbox.copyMessages(new Message[]{email}, destination);
+        Flags deleted = new Flags(Flags.Flag.DELETED);
+        inbox.setFlags(new Message[]{email}, deleted, true);
+
+        destination.close(true);
+    }
+
+    @NonNull
+    private Store connectToMailServer() throws MessagingException {
+        Properties properties = new Properties();
+        properties.setProperty("mail.store.protocol", "imaps");
+        Session emailSession = Session.getDefaultInstance(properties);
+        Store store = emailSession.getStore("imaps");
+        store.connect(mailSettings.mailServer, mailSettings.mailUser, mailSettings.mailPassword);
+        return store;
+    }
+
+    private String getUser(Message email) throws MessagingException{
         Address[] from = email.getFrom();
         if (from == null || from.length == 0) {
             Log.d("MailProcessor", "No from address found");
@@ -129,7 +176,8 @@ public class MailProcessor {
         String[] parts = address.split("@");
 
         if (parts.length != 2) {
-
+            Log.d("MailProcessor", "Invalid address "+from[0]);
+            return null;
         }
 
         String user = parts[0];
@@ -140,22 +188,59 @@ public class MailProcessor {
             return null;
         }
 
-        if (!userConfigItems.containsKey(user)) {
+        return user;
+    }
+
+    private EmailAction getEmailAction(String user) {
+        if (TextUtils.isEmpty(user)) {
+            return EmailAction.IGNORED;
+        }
+
+        UserConfigItem userConfigItem = getUserConfig(user);
+
+        if (userConfigItem == null) {
+            return EmailAction.IGNORED;
+        }
+
+        if (!userConfigItem.isValid()) {
+            Log.d("MailProcessor", user + " is disabled");
+            return EmailAction.USER_DISABLED;
+        }
+
+        Date now = Calendar.getInstance().getTime();
+
+        long timeout = mailSettings.smsTimeout * 1000L * 60;
+
+        Log.d("MailProcessor", "user "+ user + " last message " + userConfigItem.getLastMessageDate());
+
+        if (userConfigItem.getLastMessageDate() != null &&
+                now.getTime() - userConfigItem.getLastMessageDate().getTime() < timeout) {
+            Log.d("MailProcessor", "user "+ user + " timeout not expired");
+            return EmailAction.TIMEOUT;
+        }
+
+        return EmailAction.SEND_SMS;
+    }
+
+    private UserConfigItem getUserConfig(String user) {
+        List<UserConfigItem> configItems = Select.from(UserConfigItem.class).where(Condition.prop("USER_ID").eq(user)).list();
+
+        if (configItems.isEmpty()) {
             Log.d("MailProcessor", user + " not found");
             return null;
         }
 
-        UserConfigItem userConfigItem = userConfigItems.get(user);
+        return configItems.get(0);
+    }
 
-        if (!userConfigItem.isValid()) {
-            Log.d("MailProcessor", user + " is disabled");
-            return null;
-        }
+    private List<SmsMessage> getSmsMessages(String user) throws MessagingException{
+
+        UserConfigItem userConfigItem = getUserConfig(user);
 
         Log.d("MailProcessor", "Creating sms for user " + user);
 
-        StringBuilder builder = new StringBuilder(userConfigItem.getMessageSlot1());
-        builder.append(" ").append(userConfigItem.getMessageSlot2());
+        StringBuilder builder = new StringBuilder();
+        builder.append(userConfigItem.getMessageSlot1()).append(" ").append(userConfigItem.getMessageSlot2());
 
         Date now = Calendar.getInstance().getTime();
         String dateTime = DateFormat.format("dd/MM/yyyy - HH:mm", now).toString();
@@ -167,15 +252,15 @@ public class MailProcessor {
         List<SmsMessage> smsMessages = new ArrayList<>();
 
         if (!TextUtils.isEmpty(userConfigItem.getContact1())) {
-            smsMessages.add(new SmsMessage(userConfigItem.getContact1(), messageText));
+            smsMessages.add(new SmsMessage(userConfigItem.getContact1(), messageText, user));
         }
 
         if (!TextUtils.isEmpty(userConfigItem.getContact2())) {
-            smsMessages.add(new SmsMessage(userConfigItem.getContact2(), messageText));
+            smsMessages.add(new SmsMessage(userConfigItem.getContact2(), messageText, user));
         }
 
         if (!TextUtils.isEmpty(userConfigItem.getContact3())) {
-            smsMessages.add(new SmsMessage(userConfigItem.getContact3(), messageText));
+            smsMessages.add(new SmsMessage(userConfigItem.getContact3(), messageText, user));
         }
 
         if (!smsMessages.isEmpty()) {

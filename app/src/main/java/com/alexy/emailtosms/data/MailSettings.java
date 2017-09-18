@@ -10,7 +10,12 @@ public class MailSettings {
     public String mailUser;
     public String mailPassword;
     public String inboxFolder;
-    public String checkedFolder;
-//    public String smsSender;
+
+    public String notifiedFolder;
+    public String timeoutFolder;
+    public String notNotifiedFolder;
+    public String ignoredFolder;
+
     public int checkPeriod;
+    public int smsTimeout;
 }
