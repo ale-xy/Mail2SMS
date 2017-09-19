@@ -7,13 +7,7 @@ import com.alexy.emailtosms.data.UserConfigItem;
 import com.orm.SugarRecord;
 
 import org.supercsv.cellprocessor.Optional;
-import org.supercsv.cellprocessor.ParseBool;
-import org.supercsv.cellprocessor.ParseInt;
-import org.supercsv.cellprocessor.constraint.LMinMax;
-import org.supercsv.cellprocessor.constraint.NotNull;
-import org.supercsv.cellprocessor.constraint.StrRegEx;
 import org.supercsv.cellprocessor.constraint.Unique;
-import org.supercsv.cellprocessor.constraint.UniqueHashCode;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.cellprocessor.ift.StringCellProcessor;
 import org.supercsv.io.CsvBeanReader;
@@ -22,9 +16,7 @@ import org.supercsv.prefs.CsvPreference;
 import org.supercsv.util.CsvContext;
 
 import java.io.FileReader;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -76,6 +68,8 @@ public class DbLoader {
 
             UserConfigItem userConfigItem;
             Map<String, UserConfigItem> items = new HashMap();
+
+            SugarRecord.deleteAll(UserConfigItem.class);
 
             while((userConfigItem = beanReader.read(UserConfigItem.class, UserConfigItem.HEADERS, processors)) != null ) {
                 items.put(userConfigItem.getUserId(), userConfigItem);

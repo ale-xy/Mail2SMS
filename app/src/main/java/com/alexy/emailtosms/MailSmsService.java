@@ -5,12 +5,10 @@ import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.alexy.emailtosms.data.UserConfigItem;
-
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MailSmsService extends IntentService {
+    private static AtomicBoolean busy = new AtomicBoolean(false);
 
     public MailSmsService() {
         super("MailSmsService");
@@ -20,8 +18,13 @@ public class MailSmsService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         Log.d("MailSmsService", "onHandleIntent");
 
+
+        if (!busy.compareAndSet(false, true)) {
+            Log.d("MailProcessor", "Already processing");
+            return;
+        }
+
         try {
-//            Map<String, UserConfigItem> userCofigItems = DbLoader.readDb(Preferences.getDbFile(getApplicationContext()));
             MailProcessor mailProcessor = new MailProcessor(Preferences.getMailSettings(getApplicationContext()), getApplicationContext());
             mailProcessor.process();
         } catch (Exception e) {
@@ -29,6 +32,7 @@ public class MailSmsService extends IntentService {
             e.printStackTrace();
         } finally {
             StartServiceReceiver.completeWakefulIntent(intent);
+            busy.set(false);
         }
     }
 }

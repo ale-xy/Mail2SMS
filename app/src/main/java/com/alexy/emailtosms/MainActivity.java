@@ -3,8 +3,11 @@ package com.alexy.emailtosms;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -20,11 +23,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.alexy.emailtosms.data.MailSettings;
+import com.alexy.emailtosms.data.ServiceStatus;
 import com.alexy.emailtosms.data.UserConfigItem;
 import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
+import com.orm.SugarRecord;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -37,6 +45,9 @@ import butterknife.OnTextChanged;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_BROWSE = 5555;
+
+    public static final String EXTRA_STATUS = "EXTRA_STATUS";
+    public static final String STATUS_ACTION = "com.alexy.emailtosms.STATUS_ACTION";
 
     @BindView(R.id.start_stop_button) Button startButton;
     @BindView(R.id.db_path) TextView dbPath;
@@ -58,6 +69,18 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.check_period) EditText checkPeriod;
     @BindView(R.id.sms_timeout) EditText smsTimeout;
     @BindView(R.id.save_settings_button) Button saveSettingsButton;
+    @BindView(R.id.last_check) TextView lastCheck;
+    @BindView(R.id.status) TextView status;
+
+    private class StatusReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateServiceStatus(context);
+        }
+    }
+
+    private StatusReceiver statusReceiver = new StatusReceiver();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +97,36 @@ public class MainActivity extends AppCompatActivity {
         fillMailSettings(Preferences.getMailSettings(this));
 
         scheduleAlarm(getApplicationContext());
+    }
+
+    private void updateServiceStatus(Context context) {
+        List<ServiceStatus> statusList = SugarRecord.listAll(ServiceStatus.class);
+
+        if (statusList.isEmpty()) {
+            return;
+        }
+
+        ServiceStatus serviceStatus = statusList.get(0);
+        if (serviceStatus == null) {
+            return;
+        }
+        Date check = serviceStatus.getLastCheck();
+        lastCheck.setText(DateFormat.getDateTimeInstance().format(check));
+        status.setText(serviceStatus.isSuccess() ? "OK" : serviceStatus.getErrorText());
+        status.setTextColor(serviceStatus.isSuccess() ? lastCheck.getCurrentTextColor() : Color.RED);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateServiceStatus(this);
+        registerReceiver(statusReceiver, new IntentFilter(STATUS_ACTION));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(statusReceiver);
     }
 
     private void updateStartStopButton() {

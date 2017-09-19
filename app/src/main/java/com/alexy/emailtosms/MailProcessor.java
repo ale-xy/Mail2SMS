@@ -1,6 +1,7 @@
 package com.alexy.emailtosms;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
@@ -8,6 +9,7 @@ import android.text.format.DateFormat;
 import android.util.Log;
 
 import com.alexy.emailtosms.data.MailSettings;
+import com.alexy.emailtosms.data.ServiceStatus;
 import com.alexy.emailtosms.data.UserConfigItem;
 import com.orm.SugarRecord;
 import com.orm.query.Condition;
@@ -61,16 +63,17 @@ public class MailProcessor {
         this.context = context;
     }
 
-    public synchronized void process() {
+    public void process() {
+        Exception exception = null;
 
         try {
             Store store = connectToMailServer();
 
-//            Folder[] folders = store.getDefaultFolder().list();
-//
-//            for (Folder folder:folders) {
-//                Log.d("MailProcessor", "folder " + folder.getName());
-//            }
+            Folder[] folders = store.getDefaultFolder().list();
+
+            for (Folder folder:folders) {
+                Log.d("MailProcessor", "folder " + folder.getName());
+            }
 
             Folder inbox = store.getFolder(mailSettings.inboxFolder);
             inbox.open(Folder.READ_WRITE);
@@ -135,9 +138,25 @@ public class MailProcessor {
 
 
         } catch (Exception e) {
+            exception = e;
             Log.e("MailProcessor", e.getMessage());
             e.printStackTrace();
         }
+
+        ServiceStatus serviceStatus = Select.from(ServiceStatus.class).first();
+
+        if (serviceStatus == null) {
+            serviceStatus = new ServiceStatus();
+        }
+
+        serviceStatus.setSuccess(exception == null);
+        serviceStatus.setErrorText(exception == null ? null : exception.getMessage());
+        serviceStatus.setLastCheck(Calendar.getInstance().getTime());
+        SugarRecord.update(serviceStatus);
+        Log.d("MailProcessor", "Service status: " + serviceStatus);
+
+        Intent statusIntent = new Intent(MainActivity.STATUS_ACTION);
+        context.sendBroadcast(statusIntent);
     }
 
     private void moveMessages(Folder inbox, Message email, Folder destination) throws MessagingException {

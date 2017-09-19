@@ -40,7 +40,7 @@ dependencies {
     compile 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
 
-    compile 'com.nbsp:library:1.8'
+    compile 'com.nbsp:library:1.8' //file picker
     compile 'com.github.satyan:sugar:1.5'
 
     testCompile 'junit:junit:4.12'
