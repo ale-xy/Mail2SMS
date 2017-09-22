@@ -8,8 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -29,8 +31,13 @@ import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 import com.orm.SugarRecord;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -171,6 +178,11 @@ public class MainActivity extends AppCompatActivity {
 //                addFileSupport("CSV file", new String[]{"csv"}).
 //                enableDocSupport(false).showFolderView(true).
 //                pickFile(this);
+    }
+
+    @OnClick(R.id.collect_log_button)
+    public void collectLog(){
+        sendLog();
     }
 
     @Override
@@ -373,5 +385,63 @@ public class MainActivity extends AppCompatActivity {
 
         AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         alarm.cancel(pIntent);
+    }
+
+
+    public void sendLog(){
+        File outputFile = extractLogToFile();
+
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent.setType("vnd.android.cursor.dir/email");
+        emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(outputFile));
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Mail2sms log");
+        startActivity(Intent.createChooser(emailIntent , "Send email..."));
+    }
+
+
+    public File extractLogToFile(){
+        Date datum = new Date();
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        String fullName = df.format(datum)+"-mail2sms.log.txt";
+        File file = new File (Environment.getExternalStorageDirectory(), fullName);
+
+        if(file.exists()){
+            file.delete();
+        }
+
+        int pid = android.os.Process.myPid();
+
+        try {
+            String command = String.format("logcat -d -v threadtime *:*");
+            Process process = Runtime.getRuntime().exec(command);
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder result = new StringBuilder();
+            String currentLine;
+
+            while ((currentLine = reader.readLine()) != null) {
+                if (currentLine.contains(String.valueOf(pid))) {
+                    result.append(currentLine);
+                    result.append("\n");
+                }
+            }
+
+            FileWriter out = new FileWriter(file);
+            out.write(result.toString());
+            out.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError(e.getMessage());
+        }
+
+        try {
+            Runtime.getRuntime().exec("logcat -c");
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError(e.getMessage());
+        }
+
+        return file;
     }
 }

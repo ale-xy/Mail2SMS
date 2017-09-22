@@ -110,8 +110,10 @@ public class MailProcessor {
 
                                 UserConfigItem userConfigItem = getUserConfig(user);
                                 userConfigItem.setLastMessageDate(Calendar.getInstance().getTime());
+                                Log.d("MailProcessor", "Updating config for user "+ user + " time " + userConfigItem.getLastMessageDate());
                                 SugarRecord.update(userConfigItem);
                             } else {
+                                Log.d("MailProcessor", "No sms for user " +user);
                                 folderName = mailSettings.notNotifiedFolder;
                             }
 
@@ -128,6 +130,7 @@ public class MailProcessor {
                     }
 
                     moveMessages(inbox, email, destination);
+                    Log.d("MailProcessor", "Moved to " + destination.getName());
                 }
             } else {
                 Log.d("MailProcessor", "No messages found");
@@ -212,6 +215,7 @@ public class MailProcessor {
 
     private EmailAction getEmailAction(String user) {
         if (TextUtils.isEmpty(user)) {
+            Log.d("MailProcessor", "User name " + user + " is empty");
             return EmailAction.IGNORED;
         }
 
@@ -249,6 +253,7 @@ public class MailProcessor {
             return null;
         }
 
+        Log.d("MailProcessor", "Config for user " + user + ": " + configItems.get(0));
         return configItems.get(0);
     }
 
